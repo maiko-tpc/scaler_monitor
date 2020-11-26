@@ -29,14 +29,15 @@ int sca_reset(int sock_num);
 int sca_cnt(int sock_num, int cmd);
 
 int sca_read(int sock_num, int *sca_val);
-int show_val(int *sca_val);
+int show_val(int *sca_val, double *rate);
 int kbhit();
 
 volatile sig_atomic_t eflag = 0;
 void abrt_handler(int sig, siginfo_t *info, void *ctx);
 
 int main(int argc, char** argv){
-
+  int i;
+  
   /* define action when Cntl-c is given */
   struct sigaction sa_sigabrt;
   memset(&sa_sigabrt, 0, sizeof(sa_sigabrt));
@@ -69,25 +70,41 @@ int main(int argc, char** argv){
   }
   
   int sca_val[N_CH];
+  int old_sca_val[N_CH];  
+
+  for(i=0; i<N_CH; i++){
+    sca_val[i] = 0;
+    old_sca_val[i] = 0;
+  }
+
+  double rate[N_CH];
   
   /* Init ncurses */
   initscr();
 
   int cnt=0;
-  int j=0;
+  int kbres=0;
   while(!eflag){
-    
+
     /* start, stop, or reset */
-    sca_cnt(sd, kbhit());
+    kbres=kbhit();
+    if(kbres>0){
+      sca_cnt(sd, kbres);
+    }
     
     /* read scaler values */
     sca_read(sd, sca_val);
 
+    /* calcurate rate */
+    for(i=0; i<N_CH; i++){
+      rate[i] = (sca_val[i] - old_sca_val[i])/(REFRESH_TIME/1000000.0);
+      old_sca_val[i] = sca_val[i];
+    }
+    
     /* show scaler values */
-    show_val(sca_val);
+    show_val(sca_val, rate);
 
     usleep(REFRESH_TIME - SLEEP_TIME);
-
   }
 
   /* Close the soclet */
@@ -189,12 +206,13 @@ int sca_read(int sock_num, int *sca_val){
 }
 
 
-int show_val(int *sca_val){
+int show_val(int *sca_val, double *rate){
   int i;
   mvprintw(1, 2, "1:Start,  2:Stop,  3:Reset,  Ctrl-c:Exit \n");
   mvprintw(2, 2, "-------------------------------------------\n");  
   for(i=0; i<N_CH; i++){
-    mvprintw(3+i, 2, "SCA %d: %08d\n", i, sca_val[i]);
+    mvprintw(3+i,  2, "SCA %d: %08d", i, sca_val[i]);
+    mvprintw(3+i, 20, "%10.1f Hz\n", rate[i]);    
   }
   refresh();
 }
