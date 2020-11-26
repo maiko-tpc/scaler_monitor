@@ -56,7 +56,6 @@ int main(int argc, char** argv){
     perror("socket");
     return -1;
   }
-  printf("------------------------\n");
   
   addr.sin_family = AF_INET;
   addr.sin_port = htons(PORT);
