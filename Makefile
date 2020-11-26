@@ -16,4 +16,4 @@ sca_app: sca_app.c
 	gcc -o sca_app sca_app.c -lncurses
 
 clean:
-	rm -f sca_start sca_stop sca_reset sca_read
+	rm -f sca_start sca_stop sca_reset sca_read sca_app
