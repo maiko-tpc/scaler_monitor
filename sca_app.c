@@ -3,6 +3,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <string.h>
@@ -47,6 +48,38 @@ int main(int argc, char** argv){
   if (sigaction(SIGINT, &sa_sigabrt, NULL) < 0 ) {
     exit(1);
   }
+
+  /* set IP address */
+  char ip_address[256];
+  int host_flag=0;
+
+  if(argc==2){
+    if(argv[1][0]=='1'){
+      sprintf(ip_address, "%s", argv[1]);
+    }
+    else{
+      /* get IP address by hostname */
+      struct sockaddr_in ip;
+      struct hostent *host;
+      host = gethostbyname(argv[1]);
+      if( host != NULL ){
+	printf("hostname: %s\n", argv[1]);
+	ip.sin_addr =  *(struct in_addr *)(host->h_addr_list[0]);
+	sprintf(ip_address, "%s", inet_ntoa(ip.sin_addr));
+	host_flag=1;
+      }
+      if( host ==NULL){
+	printf("Unknown hostname: %s\n", argv[1]);
+	exit(1);
+      }
+    }
+  }
+
+  if(argc!=2){
+    sprintf(ip_address, "172.16.211.102");  // RCNP maikosca0
+  }
+
+  printf("IP address: %s\n", ip_address);
   
   /* Prepare socket */
   struct sockaddr_in addr;
@@ -59,7 +92,7 @@ int main(int argc, char** argv){
   
   addr.sin_family = AF_INET;
   addr.sin_port = htons(PORT);
-  addr.sin_addr.s_addr = inet_addr("172.16.211.102");  // RCNP maikosca0
+  addr.sin_addr.s_addr = inet_addr(ip_address);
 
   /* Connect to the scaler */
   int connect_res = connect(sd, (struct sockaddr *)&addr, sizeof(struct sockaddr_in));
@@ -81,6 +114,13 @@ int main(int argc, char** argv){
   /* Init ncurses */
   initscr();
 
+  /* show ip address */
+  mvprintw(0, 2, "IP: %s", ip_address);
+  if(host_flag==1){
+    mvprintw(0, 22, "host: %s", argv[1]);
+  }
+
+  
   int cnt=0;
   int kbres=0;
   while(!eflag){
