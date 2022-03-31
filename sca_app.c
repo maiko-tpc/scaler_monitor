@@ -9,6 +9,7 @@
 #include <string.h>
 #include <unistd.h>
 #include <signal.h>
+#include <time.h>
 #include <ncurses.h> // sudo apt install libncurses-dev
 
 /* for kbhit func */
@@ -247,11 +248,15 @@ int sca_read(int sock_num, int *sca_val){
 
 int show_val(int *sca_val, double *rate){
   int i;
+  char date[64];
+  time_t t = time(NULL);;
+  strftime(date, sizeof(date), "%Y/%m/%d %a %H:%M:%S", localtime(&t));
   mvprintw(1, 2, "1:Start,  2:Stop,  3:Reset,  Ctrl-c:Exit \n");
-  mvprintw(2, 2, "-------------------------------------------\n");  
+  mvprintw(2, 2, "%s \n", date);  
+  mvprintw(3, 2, "-------------------------------------------\n");  
   for(i=0; i<N_CH; i++){
-    mvprintw(3+i,  2, "SCA %d: %08d", i, sca_val[i]);
-    mvprintw(3+i, 20, "%10.1f Hz\n", rate[i]);    
+    mvprintw(4+i,  2, "SCA %d: %08d", i, sca_val[i]);
+    mvprintw(4+i, 20, "%10.1f Hz\n", rate[i]);    
   }
   refresh();
 }
