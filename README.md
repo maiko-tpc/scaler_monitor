@@ -8,3 +8,5 @@ useage:
  - $> ./sca_stop  (just stop)
  - $> ./sca_stop  (just reset)
  - $> ./sca_read  (show current values) 
+
+You can define the channel names in "ch_name.def"

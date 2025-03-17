@@ -19,11 +19,13 @@
 
 const int SLEEP_TIME = 100000; // in us
 const int REFRESH_TIME = 1000000; // in us
-const int N_CH = 8;
+//const int N_CH = 8;
+#define N_CH  8
 const int DIGIT = 8;
 const int DATA_LEN = 76;
 const int PORT = 10001;
 
+char ch_name[N_CH][64];
 
 int sca_start(int sock_num);
 int sca_stop(int sock_num);
@@ -50,6 +52,38 @@ int main(int argc, char** argv){
     exit(1);
   }
 
+  /* default channel name */
+  for(int i=0; i<N_CH; i++){
+    sprintf(ch_name[i], "SCA %d", i);
+  }
+
+  /* read channel name def file */
+  FILE* fp;
+  fp = fopen("ch_name.def", "r");
+  char tmp[64];
+  int cnt_name=0;
+  if(fp != NULL){
+    while(fgets(tmp, 64, fp) != NULL){
+      if(cnt_name<N_CH){
+	// delete "\n" in the last character
+	if(*tmp && tmp[strlen(tmp)-1]=='\n') tmp[strlen(tmp)-1] =0;
+	sprintf(ch_name[cnt_name], "%s", tmp);
+	//	printf("%s\n", ch_name[i]);
+	cnt_name++;
+      }
+    }
+  }
+
+  /* count maximum ch_name length */
+  int max_len = 0;
+  int tmp_len;
+  for(int i=0; i<N_CH; i++){
+    tmp_len = strlen(ch_name[i]);
+    if(tmp_len > max_len) max_len = tmp_len;
+  }
+
+  //  printf("max len=%d\n", max_len);
+  
   /* set IP address */
   char ip_address[256];
   int host_flag=0;
@@ -77,7 +111,8 @@ int main(int argc, char** argv){
   }
 
   if(argc!=2){
-    sprintf(ip_address, "172.16.211.102");  // RCNP maikosca0
+    //    sprintf(ip_address, "192.168.253.144");  // RARiS 2025 for scinti
+    sprintf(ip_address, "192.168.253.145");  // RARiS 2025 for MAIKo
   }
 
   printf("IP address: %s\n", ip_address);
@@ -138,6 +173,7 @@ int main(int argc, char** argv){
     /* calcurate rate */
     for(i=0; i<N_CH; i++){
       rate[i] = (sca_val[i] - old_sca_val[i])/(REFRESH_TIME/1000000.0);
+      if(rate[i]<0) rate[i]=0;
       old_sca_val[i] = sca_val[i];
     }
     
@@ -253,10 +289,13 @@ int show_val(int *sca_val, double *rate){
   strftime(date, sizeof(date), "%Y/%m/%d %a %H:%M:%S", localtime(&t));
   mvprintw(1, 2, "1:Start,  2:Stop,  3:Reset,  Ctrl-c:Exit \n");
   mvprintw(2, 2, "%s \n", date);  
-  mvprintw(3, 2, "-------------------------------------------\n");  
+  mvprintw(3, 2, "---------------------------------------------------\n");  
   for(i=0; i<N_CH; i++){
-    mvprintw(4+i,  2, "SCA %d: %08d", i, sca_val[i]);
-    mvprintw(4+i, 20, "%10.1f Hz\n", rate[i]);    
+    //    mvprintw(4+i,  2, "SCA %d: %08d", i, sca_val[i]);
+    //    mvprintw(4+i, 20, "%10.1f Hz\n", rate[i]);    
+    mvprintw(4+i,  2,  "SCA %d (%s)", i, ch_name[i]);
+    mvprintw(4+i, 30, "%08d", sca_val[i]);        
+    mvprintw(4+i, 40, "%10.1f Hz\n", rate[i]);    
   }
   refresh();
 }
