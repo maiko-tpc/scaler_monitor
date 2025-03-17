@@ -298,6 +298,7 @@ int show_val(int *sca_val, double *rate){
     mvprintw(4+i, 40, "%10.1f Hz\n", rate[i]);    
   }
   refresh();
+  return 0;
 }
 
 
