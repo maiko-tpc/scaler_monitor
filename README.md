@@ -1,5 +1,7 @@
 You need to install ncurses by
- $> sudo apt install libncurses-dev 
+```
+$> sudo apt install libncurses-dev 
+```
 
 useage:
  - $> ./sca_app [hostname / IP-address]  (for monitor tool)
