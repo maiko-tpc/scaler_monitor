@@ -286,6 +286,9 @@ int show_val(int *sca_val, double *rate){
   int i;
   char date[64];
   time_t t = time(NULL);;
+
+  clear(); // clear the ncurses
+
   strftime(date, sizeof(date), "%Y/%m/%d %a %H:%M:%S", localtime(&t));
   mvprintw(1, 2, "1:Start,  2:Stop,  3:Reset,  Ctrl-c:Exit \n");
   mvprintw(2, 2, "%s \n", date);  
